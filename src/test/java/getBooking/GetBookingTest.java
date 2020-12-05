@@ -1,18 +1,15 @@
 package getBooking;
 
 import base.BaseTest;
-
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import model.Booking;
 import model.Bookingdates;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -63,18 +60,17 @@ public class GetBookingTest extends BaseTest {
 
         JsonPath jsonResponse = response.jsonPath();
         List<Integer> bookings = jsonResponse.getList("bookingid");
-        bookingId = bookings.get(bookings.size() - 2);
 
         assertThat(bookings.size()).isEqualTo(10);
 
     }
 
     @ParameterizedTest
-    @MethodSource("bookingData")
-    void getBookingIdByFiltering(String queryParam, String booking) {
+    @MethodSource("bookingDataSingleParameter")
+    void getBookingIdByFilteringWithOneParameter(String queryParam, String value) {
 
         given()
-                .queryParam(queryParam, booking)
+                .queryParam(queryParam, value)
                 .when()
                 .get(BASE_URL + BOOKING)
                 .then()
@@ -83,7 +79,22 @@ public class GetBookingTest extends BaseTest {
 
     }
 
-    private static Stream<Arguments> bookingData() {
+    @ParameterizedTest
+    @MethodSource("bookingDataWithMultipleParameters")
+    void getBookingIdFilteringWithMultipleParams(String queryParam1, String value1, String queryParam2, String value2) {
+
+        given()
+                .queryParam(queryParam1, value1)
+                .queryParam(queryParam2, value2)
+                .when()
+                .get(BASE_URL + BOOKING)
+                .then()
+                .statusCode(200)
+                .body("[0]", hasKey("bookingid"));
+
+    }
+
+    private static Stream<Arguments> bookingDataSingleParameter() {
 
         return Stream.of(
                 Arguments.of("firstname", booking.getFirstname()),
@@ -93,4 +104,19 @@ public class GetBookingTest extends BaseTest {
         );
     }
 
+    private static Stream<Arguments> bookingDataWithMultipleParameters() {
+
+        return Stream.of(
+                Arguments.of("firstname", booking.getFirstname(), "lastname", booking.getLastname()),
+                Arguments.of("firstname", booking.getFirstname(), "checkin", bookingdates.getCheckin()),
+                Arguments.of("firstname", booking.getFirstname(), "checkout", bookingdates.getCheckout()),
+                Arguments.of("lastname", booking.getLastname(), "checkin", bookingdates.getCheckin()),
+                Arguments.of("lastname", booking.getLastname(), "checkout", bookingdates.getCheckout()),
+                Arguments.of("checkin", bookingdates.getCheckin(), "checkout", bookingdates.getCheckout())
+        );
+    }
+
 }
+
+
+
