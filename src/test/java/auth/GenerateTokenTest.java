@@ -2,48 +2,41 @@ package auth;
 
 import base.BaseTest;
 import io.restassured.path.json.JsonPath;
-import io.restassured.response.Response;
 import model.User;
 import org.junit.jupiter.api.BeforeAll;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
+import requests.PostRequest;
 import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.*;
-import static org.apache.http.HttpStatus.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.collection.IsMapContaining.hasKey;
 
 public class GenerateTokenTest extends BaseTest {
 
     private static User user;
+    static PostRequest postRequest;
 
     @BeforeAll
     static void setUpUser(){
+
         user = new User();
+        postRequest = new PostRequest();
     }
 
     @Test
     void generateValidToken() {
 
-        user.setUsername("admin");
-        user.setPassword("password123");
+        user.setUsername(USERNAME);
+        user.setPassword(PASSWORD);
 
-        given()
-                .contentType(JSON)
-                .body(user)
-                .when()
-                .post(BASE_URL + AUTH)
-                .then()
-                .statusCode(SC_OK)
-                .body("$", hasKey("token"));
+        JsonPath jsonResponse = postRequest.sendPostRequest(AUTH, user);
+
+        TOKEN = jsonResponse.getString("token");
+        assertThat(jsonResponse.getString("token")).isNotEmpty();
+
     }
-
 
     @ParameterizedTest
     @MethodSource("userCredentialsData")
@@ -52,26 +45,20 @@ public class GenerateTokenTest extends BaseTest {
         user.setUsername(username);
         user.setPassword(password);
 
-        Response response = given()
-                .contentType(JSON)
-                .body(user)
-                .when()
-                .post(BASE_URL + AUTH)
-                .then()
-                .statusCode(SC_OK)
-                .extract()
-                .response();
+        JsonPath jsonResponse = postRequest.sendPostRequest(AUTH, user);
 
-        JsonPath jsonResponse=  response.jsonPath();
         assertThat(jsonResponse.getString("reason")).contains("Bad credentials");
+
     }
 
     private static Stream<Arguments> userCredentialsData() {
 
         return Stream.of(
-                Arguments.of("test", "test"),
-                Arguments.of("", ""),
-                Arguments.of("test$!", "test$!")
+                Arguments.of("test", PASSWORD),
+                Arguments.of(USERNAME, "test"),
+                Arguments.of("test$!", "test$!"),
+                Arguments.of("", PASSWORD),
+                Arguments.of(USERNAME, "")
         );
     }
 }

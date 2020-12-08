@@ -20,7 +20,7 @@
         <com.github.javafaker>1.0.2</com.github.javafaker>
         <org.assertj>3.16.1</org.assertj>
         <com.fasterxml.jackson.core>2.11.2</com.fasterxml.jackson.core>
-        <org.projectlombok>1.18.12</org.projectlombok>
+        <org.projectlombok>1.18.16</org.projectlombok>
         <io.qameta.allure>2.13.3</io.qameta.allure>
         <allure-maven>2.9</allure-maven>
     </properties>

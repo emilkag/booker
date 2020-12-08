@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import requests.GetRequest;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -19,9 +20,9 @@ import static org.hamcrest.collection.IsMapContaining.hasKey;
 
 public class GetBookingTest extends BaseTest {
 
-    static int bookingId = 2;
     static Booking booking;
     static Bookingdates bookingdates;
+    static GetRequest getRequest;
 
 
     @BeforeAll
@@ -29,15 +30,10 @@ public class GetBookingTest extends BaseTest {
 
         bookingdates = new Bookingdates();
         booking = new Booking();
+        getRequest = new GetRequest();
 
-        Response response = given()
-                .when()
-                .get(BASE_URL + BOOKING + "/" + bookingId)
-                .then()
-                .extract()
-                .response();
+        JsonPath jsonResponse =getRequest.sendGetRequest("booking/2");
 
-        JsonPath jsonResponse = response.jsonPath();
         booking.setFirstname(jsonResponse.get("firstname"));
         booking.setLastname(jsonResponse.get("lastname"));
         bookingdates.setCheckin(jsonResponse.get("bookingdates.checkin"));
@@ -49,18 +45,8 @@ public class GetBookingTest extends BaseTest {
     @Test
     void getIdsOfAllBookings() {
 
-        Response response = given()
-                .when()
-                .get(BASE_URL + BOOKING)
-                .then()
-                .statusCode(200)
-                .body("$", hasKey("bookingid"))
-                .extract()
-                .response();
-
-        JsonPath jsonResponse = response.jsonPath();
+        JsonPath jsonResponse = getRequest.sendGetRequest(BOOKING);
         List<Integer> bookings = jsonResponse.getList("bookingid");
-
         assertThat(bookings.size()).isEqualTo(10);
 
     }
